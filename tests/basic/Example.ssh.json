@@ -1,0 +1,7 @@
+{
+    "type": "ssh",
+    "use public key": "00:11:22:..",
+    "server": "192.168.1.101",
+    "known hosts": "something",
+    "secrets": "-----BEGIN PGP MESSAGE-----\n\nhF4Dtnt/v3fiwJYSAQdAo7+0cPcnpa5pE2Gm7gazwYu+1qNev3OOJZzHxA1BWw4w\nOwJqIIZF1u2eN9v6gzpkgHUVXVTH+rpCSbhLR4gH2Ctn9q9nGAT8/fenCjtEp96B\n0sASAdSOH/5MLwegYzZOis2LR0TXo9EwiisBxUEYUARmUehyidG0YEzJRAPA4kMc\nZJyg7vTwmeaF2I1DVKi2nELGvdJErRMgfrerfQxyyrVAYUxMrc3grbmptkzLTw6/\nUg3LuvUSlAKsHTLoYBRHRx8G9C3nKdEUIhea9CdZRlSpARCZkk0YSt6A/Q38ksQw\nX0OGe+0zgPG7rq/xOzvvUEh1LPLxG0RH5/Xkinnpb8ks+8Z6sfBK/ljw7DTv3Ym9\n+5BXISW0XzMOqalmKAM7Rug4X454\n=pNZR\n-----END PGP MESSAGE-----\n"
+}
