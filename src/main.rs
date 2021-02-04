@@ -56,33 +56,6 @@ pub enum Error {
     Gpg(gpg::Error),
 }
 
-trait Decrypt {
-    fn decrypt(&mut self) -> Result<serde_json::Value, Error>;
-}
-
-trait Encrypt {
-    fn encrypt(&mut self) -> Result<&mut Self, Error>;
-}
-
-impl Encrypt for serde_json::Value {
-    fn encrypt(&mut self) -> Result<&mut Self, Error> {
-        todo!()
-    }
-}
-
-impl Decrypt for serde_json::Value {
-    fn decrypt(&mut self) -> Result<serde_json::Value, Error> {
-        match self {
-            serde_json::Value::String(encrypted_value) => {
-                let decrypted = gpg::decrypt(encrypted_value)?;
-                let decrypted_value = serde_json::from_str(&decrypted)?;
-                Ok(decrypted_value)
-            }
-            _ => Err(Error::DecryptRequiresJsonObject),
-        }
-    }
-}
-
 fn add_filename(value: &mut Map<String, Value>, file: PathBuf) {
     value.insert("$file".into(), file.to_string_lossy().into());
 }
