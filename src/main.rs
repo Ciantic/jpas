@@ -34,7 +34,7 @@ enum SubCommand {
 
 #[derive(Clap, Debug)]
 struct SaveOpts {
-    file: Option<String>,
+    file: Option<PathBuf>,
 }
 
 #[derive(Clap, Debug)]
@@ -47,88 +47,134 @@ pub enum Error {
     // Yaml(serde_yaml::Error),
     Json(serde_json::Error),
     Io(std::io::Error),
-    SaveFileMissing,
+    FileMissing,
     SaveInput,
-    DecryptRequiresJsonObject,
+    RequiresJsonObject,
     SecretsPropertyMissing,
     SecretsMustBeString,
     SecretsAlreadyDecrypted,
     Gpg(gpg::Error),
 }
 
-fn add_filename(value: &mut Map<String, Value>, file: PathBuf) {
-    value.insert("$file".into(), file.to_string_lossy().into());
-}
-
-fn decrypt_secrets(value: &mut Map<String, Value>) -> Result<(), Error> {
-    match value.get("secrets") {
-        Some(serde_json::Value::String(gpg_secrets)) => {
-            let decrypted = gpg::decrypt(gpg_secrets)?;
-            let decrypted_json = serde_json::from_str(&decrypted)?;
-            value.insert("secrets".into(), decrypted_json);
+fn json_add_filename(json: &mut serde_json::Value, file: PathBuf) -> Result<(), Error> {
+    match json {
+        serde_json::Value::Object(value) => {
+            value.insert("$file".into(), file.to_string_lossy().into());
             Ok(())
         }
-        Some(serde_json::Value::Object(_)) => Err(Error::SecretsAlreadyDecrypted),
-        Some(_) => Err(Error::SecretsMustBeString),
-        None => Err(Error::SecretsPropertyMissing),
+        _ => Err(Error::RequiresJsonObject),
     }
 }
 
-fn encrypt_secrets(value: &mut Map<String, Value>) -> Result<(), Error> {
-    todo!()
+fn json_get_filename(json: &serde_json::Value) -> Result<PathBuf, Error> {
+    match &json["$file"] {
+        serde_json::Value::String(filename) => Ok(PathBuf::from(filename)),
+        serde_json::Value::Null => Err(Error::RequiresJsonObject),
+        _ => Err(Error::FileMissing),
+    }
 }
+
+fn json_decrypt_prop(json: &mut serde_json::Value, prop: &str) -> Result<(), Error> {
+    match json {
+        serde_json::Value::Object(value) => match value.get(prop) {
+            Some(serde_json::Value::String(gpg_secrets)) => {
+                let decrypted = gpg::decrypt(gpg_secrets)?;
+                let decrypted_json = serde_json::from_str(&decrypted)?;
+                value.insert(prop.into(), decrypted_json);
+                Ok(())
+            }
+            Some(serde_json::Value::Object(_)) => Err(Error::SecretsAlreadyDecrypted),
+            Some(_) => Err(Error::SecretsMustBeString),
+            None => Err(Error::SecretsPropertyMissing),
+        },
+        _ => Err(Error::RequiresJsonObject),
+    }
+}
+
+fn json_encrypt_prop(json: &mut serde_json::Value, prop: &str) -> Result<(), Error> {
+    match json {
+        serde_json::Value::Object(value) => match value.get(prop) {
+            Some(serde_json::Value::String(gpg_secrets)) => {
+                let decrypted = gpg::decrypt(gpg_secrets)?;
+                let decrypted_json = serde_json::from_str(&decrypted)?;
+                value.insert(prop.into(), decrypted_json);
+                Ok(())
+            }
+            Some(serde_json::Value::Object(_)) => Err(Error::SecretsAlreadyDecrypted),
+            Some(_) => Err(Error::SecretsMustBeString),
+            None => Err(Error::SecretsPropertyMissing),
+        },
+        _ => Err(Error::RequiresJsonObject),
+    }
+}
+
+// fn json_decrypt_secrets(value: &mut Map<String, Value>) -> Result<(), Error> {
+//     match value.get("secrets") {
+//         Some(serde_json::Value::String(gpg_secrets)) => {
+//             let decrypted = gpg::decrypt(gpg_secrets)?;
+//             let decrypted_json = serde_json::from_str(&decrypted)?;
+//             value.insert("secrets".into(), decrypted_json);
+//             Ok(())
+//         }
+//         Some(serde_json::Value::Object(_)) => Err(Error::SecretsAlreadyDecrypted),
+//         Some(_) => Err(Error::SecretsMustBeString),
+//         None => Err(Error::SecretsPropertyMissing),
+//     }
+// }
+
+// fn json_encrypt_secrets(value: &mut Map<String, Value>) -> Result<(), Error> {
+//     match value.get("secrets") {
+//         Some(v) => {
+//             value.insert("secrets".into(), serde_json::Value::String(v.to_string()));
+//             Ok(())
+//         }
+//         None => Err(Error::SecretsPropertyMissing),
+//     }
+// }
 
 fn main() -> Result<(), Error> {
     let opts: Opts = Opts::parse();
 
     match opts.subcmd {
-        SubCommand::Open(values) => {
-            let mut file = None;
-            let input = match values.input {
+        SubCommand::Open(opts) => {
+            let (mut json, file) = match opts.input {
+                // User provided file in a cli argument
                 Some(filename) => {
                     let filepath = PathBuf::from(filename);
                     let contents = std::fs::read_to_string(&filepath)?;
-                    file = Some(filepath);
-                    contents
+                    let json: serde_json::Value = serde_json::from_str(&contents)?;
+                    (json, filepath)
                 }
+                // User most likely wants to provide JSON by piping with stdin
                 None => {
                     let mut buffer = String::new();
                     std::io::stdin().read_to_string(&mut buffer)?;
-                    buffer
+                    let json: serde_json::Value = serde_json::from_str(&buffer)?;
+                    let file = json_get_filename(&json)?;
+                    (json, file)
                 }
             };
-
-            if let serde_json::Value::Object(mut value) = serde_json::from_str(&input)? {
-                if let Some(file) = file {
-                    add_filename(&mut value, file);
-                }
-                decrypt_secrets(&mut value)?;
-                println!("{}", serde_json::to_string_pretty(&value)?);
-                Ok(())
-            } else {
-                Err(Error::DecryptRequiresJsonObject)
-            }
+            json_add_filename(&mut json, file)?;
+            json_decrypt_prop(&mut json, "secrets")?;
+            println!("{}", serde_json::to_string_pretty(&json)?);
+            Ok(())
         }
-        SubCommand::Save(values) => {
-            let file = values.file;
+        SubCommand::Save(opts) => {
+            // Read JSON from stdin
             let mut buffer = String::new();
             std::io::stdin().read_to_string(&mut buffer)?;
+            let mut json = serde_json::from_str(&buffer)?;
 
-            if let serde_json::Value::Object(mut values) = serde_json::from_str(&buffer)? {
-                let file_in_json = values.get("$file").map(|v| v.as_str().unwrap_or("").into());
-                if let Some(file) = file.or(file_in_json) {
-                    let filepath = PathBuf::from(file);
-                    let _ = values.remove("$file");
-                    encrypt_secrets(&mut values)?;
-                    let json = serde_json::to_string_pretty(&serde_json::Value::Object(values))?;
-                    std::fs::write(filepath, json)?;
-                    Ok(())
-                } else {
-                    Err(Error::SaveFileMissing)
-                }
-            } else {
-                Err(Error::SaveInput)
-            }
+            // Get save file from cli option, or $file property in JSON
+            let file: PathBuf = match opts.file {
+                Some(v) => v,
+                None => json_get_filename(&json)?,
+            };
+
+            // Encrypt and save the JSON
+            json_encrypt_prop(&mut json, "secrets")?;
+            std::fs::write(file, serde_json::to_string_pretty(&json)?)?;
+            Ok(())
         }
     }
 }
