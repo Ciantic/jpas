@@ -11,10 +11,7 @@ use std::{
 mod gpg;
 
 #[derive(Clap)]
-#[clap(
-    version = "1.0",
-    author = "Jari O. O. Pennanen <jari.pennanen@gmail.com>"
-)]
+#[clap(version = "1.0", author = "Jari O. O. Pennanen <ciantic@oksidi.com>")]
 struct Opts {
     #[clap(short, long, parse(from_occurrences))]
     verbose: i32,
@@ -25,10 +22,10 @@ struct Opts {
 
 #[derive(Clap)]
 enum SubCommand {
-    /// Open password file entry and outputs to stdout
+    /// Open file entry and outputs to stdout
     Open(OpenOpts),
 
-    /// Save password, requires the result of open in stdin
+    /// Save file entry
     Save(SaveOpts),
 }
 
@@ -39,7 +36,7 @@ struct SaveOpts {
 
 #[derive(Clap, Debug)]
 struct OpenOpts {
-    input: Option<String>,
+    file: Option<PathBuf>,
 }
 
 #[derive(From, Debug)]
@@ -129,13 +126,14 @@ fn json_encrypt_prop(json: &mut serde_json::Value, prop: &str) -> Result<(), Err
 }
 
 fn open(opts: OpenOpts, stdin: &mut dyn Read) -> Result<serde_json::Value, Error> {
-    let (mut json, file) = match opts.input {
+    let mut json = match opts.file {
         // User provided JSON file path as a cli argument
         Some(filename) => {
             let filepath = PathBuf::from(filename).normalize()?;
             let contents = std::fs::read_to_string(&filepath)?;
-            let json: serde_json::Value = serde_json::from_str(&contents)?;
-            (json, filepath)
+            let mut json: serde_json::Value = serde_json::from_str(&contents)?;
+            json_add_file(&mut json, filepath.into())?;
+            json
         }
 
         // User is expected to provide JSON through stdin
@@ -143,16 +141,14 @@ fn open(opts: OpenOpts, stdin: &mut dyn Read) -> Result<serde_json::Value, Error
             let mut buffer = String::new();
             stdin.read_to_string(&mut buffer)?;
             let json: serde_json::Value = serde_json::from_str(&buffer)?;
-            let filepath = json_get_file(&json)?.normalize()?;
-            (json, filepath)
+            json
         }
     };
-    json_add_file(&mut json, file.into())?;
     json_decrypt_prop(&mut json, "secrets")?;
     Ok(json)
 }
 
-fn save(opts: SaveOpts, stdin: &mut dyn Read) -> Result<serde_json::Value, Error> {
+fn save(opts: SaveOpts, stdin: &mut dyn Read) -> Result<(), Error> {
     // Read JSON from stdin
     let mut buffer = String::new();
     stdin.read_to_string(&mut buffer)?;
@@ -168,7 +164,7 @@ fn save(opts: SaveOpts, stdin: &mut dyn Read) -> Result<serde_json::Value, Error
     let _ = json_remove_file(&mut json);
     json_encrypt_prop(&mut json, "secrets")?;
     std::fs::write(file, serde_json::to_string_pretty(&json)?)?;
-    Ok(json)
+    Ok(())
 }
 
 fn main() -> Result<(), Error> {
@@ -227,16 +223,17 @@ mod tests {
     #[test]
     fn test_open_from_file() {
         test_init_gpghome();
-        let examplefilep: String = "./tests/basic/Example.ssh.json".into();
+        let examplefile: PathBuf = PathBuf::from("./tests/basic/Example.ssh.json")
+            .normalize()
+            .unwrap()
+            .into();
         let json = open(
             OpenOpts {
-                input: Some(examplefilep.clone()),
+                file: Some(examplefile.clone()),
             },
             &mut "".as_bytes(),
         )
         .unwrap();
-
-        let examplefile: PathBuf = PathBuf::from(examplefilep).normalize().unwrap().into();
 
         assert_eq!(
             json,
@@ -254,8 +251,37 @@ mod tests {
     }
 
     #[test]
+    fn test_open_from_stdin() {
+        test_init_gpghome();
+        let examplefile: PathBuf = PathBuf::from("./tests/basic/Example.ssh.json")
+            .normalize()
+            .unwrap()
+            .into();
+        let example_contents = std::fs::read_to_string(examplefile).unwrap();
+        let json = open(OpenOpts { file: None }, &mut example_contents.as_bytes()).unwrap();
+
+        assert_eq!(
+            json,
+            json!({
+                "type": "ssh",
+                "use public key": "00:11:22:..",
+                "server": "192.168.1.101",
+                "known hosts": "something",
+                "secrets": {
+                  "password": "swordfish"
+                }
+            })
+        );
+    }
+
+    #[test]
     fn test_save_from_stdin() {
         test_init_gpghome();
+        // Output file, remove for each test time
+        let outputfile = PathBuf::from("./tests/basic/test_save_from_stdin.temp.ssh.json");
+        let _ = std::fs::remove_file(&outputfile);
+
+        // Save to $file
         let examplejson = serde_json::to_string_pretty(&json!({
             "type": "ssh",
             "use public key": "00:11:22:..",
@@ -264,11 +290,64 @@ mod tests {
             "secrets": {
               "password": "swordfish"
             },
-            "$file": PathBuf::from("./tests/basic/Example For Saving.ssh.json")
+            "$file": outputfile
         }))
         .unwrap();
 
-        let json = save(SaveOpts { file: None }, &mut examplejson.as_bytes()).unwrap();
+        save(SaveOpts { file: None }, &mut examplejson.as_bytes()).unwrap();
+
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(outputfile).unwrap()).unwrap();
+
+        assert_eq!(
+            json["secrets"]
+                .as_str()
+                .unwrap()
+                .starts_with("-----BEGIN PGP MESSAGE-----"),
+            true
+        );
+
+        assert_eq!(
+            json,
+            json!({
+                "type": "ssh",
+                "use public key": "00:11:22:..",
+                "server": "192.168.1.101",
+                "known hosts": "something",
+                "secrets": json["secrets"],
+            })
+        )
+    }
+
+    #[test]
+    fn test_save_to_file() {
+        test_init_gpghome();
+        // Output file, remove for each test time
+        let outputfile = PathBuf::from("./tests/basic/test_save_to_file.temp.ssh.json");
+        let _ = std::fs::remove_file(&outputfile);
+
+        // Save to $file
+        let examplejson = serde_json::to_string_pretty(&json!({
+            "type": "ssh",
+            "use public key": "00:11:22:..",
+            "server": "192.168.1.101",
+            "known hosts": "something",
+            "secrets": {
+              "password": "swordfish"
+            },
+        }))
+        .unwrap();
+
+        save(
+            SaveOpts {
+                file: Some(outputfile.clone()),
+            },
+            &mut examplejson.as_bytes(),
+        )
+        .unwrap();
+
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&outputfile).unwrap()).unwrap();
 
         assert_eq!(
             json["secrets"]
