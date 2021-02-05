@@ -7,10 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# NOTE: We need normpath crate, because the canonicalization in Windows adds UNC
+# prefix, which fails to work with GPG4Win
 normpath = "0.2"
+
 clap = { version = "3.0.0-beta.2", features = ["yaml"] }
 url = { version = "2.2", features = ["serde"] }
-# serde = "1.0"
 serde_json = { version = "1.0", features = ["preserve_order"] }
-# serde_yaml = { version = "0.8" }
 derive_more = "0.99"
+
+[dev-dependencies]
+once_cell = "1.5"

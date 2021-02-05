@@ -18,7 +18,7 @@ pub fn decrypt(str: &str) -> Result<String, Error> {
         .arg("--decrypt")
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .spawn()?;
     let outstdin = cmd.stdin.as_mut().unwrap();
     write!(outstdin, "{}", str)?;
@@ -60,47 +60,19 @@ pub fn encrypt(str: &str) -> Result<String, Error> {
 
 #[cfg(test)]
 pub mod tests {
-    use std::path::PathBuf;
-
-    use normpath::PathExt;
-
+    use super::super::tests::test_init_gpghome;
     use super::{decrypt, encrypt};
 
-    pub fn init_gpg_test() {
-        // NOTE: We need normpath crate, because the canonicalization in Windows
-        // adds UNC prefix, which fails to work with GPG4Win
-
-        // Initiate testing GNUPGHOME if not existing yet
-        let testkey = PathBuf::from("./tests/gpg/test-private.keys")
-            .normalize()
-            .unwrap();
-        let gnupghome = PathBuf::from("./tests/gpg/.gnupghome");
-        if std::fs::metadata(&gnupghome).is_err() {
-            std::fs::create_dir(&gnupghome).unwrap();
-            std::env::set_var("GNUPGHOME", gnupghome.normalize().unwrap());
-            std::process::Command::new("gpg")
-                .arg("--batch")
-                .arg("--passphrase")
-                .arg("")
-                .arg("--import")
-                .arg(testkey)
-                .status()
-                .expect("Failed to import the keys");
-        } else {
-            std::env::set_var("GNUPGHOME", gnupghome.canonicalize().unwrap());
-        }
-    }
-
     #[test]
-    pub fn test_encrypt() {
-        init_gpg_test();
-        let value = encrypt("Foo").unwrap();
+    fn test_encrypt() {
+        test_init_gpghome();
+        let value = encrypt("swordfish").unwrap();
         assert_eq!(value.starts_with("-----BEGIN PGP MESSAGE-----"), true)
     }
 
     #[test]
-    pub fn test_decrypt() {
-        init_gpg_test();
+    fn test_decrypt() {
+        test_init_gpghome();
         let value = encrypt("swordfish").unwrap();
         let again = decrypt(&value).unwrap();
         assert_eq!(again, "swordfish")
