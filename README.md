@@ -1,6 +1,30 @@
 # jpas
 
-Examples
+Work in progress.
+
+Idea is to parse JSON, with a property called secrets, that is PGP encrypted JSON value:
+
+```json
+{
+    "type": "website",
+    "url": "https://example.com",
+    "secrets": "-----BEGIN PGP MESSAGE-----..."
+}
+```
+
+When decrypted it looks like this:
+
+```json
+{
+    "type": "website",
+    "url": "https://example.com",
+    "secrets": {
+        "password": "swordfish"
+    }
+}
+```
+
+## Examples
 
 ```bash
 
@@ -23,3 +47,18 @@ find -name "*.website.json" | ... # jpas open | jq ".secrets.password" | jpas cl
 Tests should generate new `GNUPGHOME` directory under `./tests/gpg/.gnupghome/`, if
 something fails on creating it, the tests will fail too. Delete that directory
 if tests ceases to function for some reason.
+
+## TODO
+
+JSON Schema per entry:
+
+-   Website
+-   SSH/SFTP-site
+
+## More secure JSON editor
+
+It would be nice to make cli based JSON editor that takes input from stdin and outputs the finald result to stdout. Then I could use it like `vipe`, but without intermediate files.
+
+```bash
+jpas open "Some site.json" | somejsoneditor | jpas save
+```
