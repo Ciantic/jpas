@@ -94,6 +94,7 @@ fn json_get_file(json: &serde_json::Value) -> Result<PathBuf, Error> {
     }
 }
 
+/// Decrypt the GPG encrypted JSON property
 fn json_decrypt_prop(json: &mut serde_json::Value, prop: &str) -> Result<(), Error> {
     match json {
         serde_json::Value::Object(value) => match value.get(prop) {
@@ -111,6 +112,7 @@ fn json_decrypt_prop(json: &mut serde_json::Value, prop: &str) -> Result<(), Err
     }
 }
 
+/// GPG encrypt the property value to string
 fn json_encrypt_prop(json: &mut serde_json::Value, prop: &str) -> Result<(), Error> {
     match json {
         serde_json::Value::Object(value) => match value.get(prop) {
@@ -220,6 +222,7 @@ mod tests {
         Lazy::force(&CREATE_GPGHOME);
     }
 
+    /// `$ jpas save "./tests/basic/Example.ssh.json"`
     #[test]
     fn test_open_from_file() {
         test_init_gpghome();
@@ -250,6 +253,7 @@ mod tests {
         );
     }
 
+    /// `$ cat ./tests/basic/Example.ssh.json | jpas open`
     #[test]
     fn test_open_from_stdin() {
         test_init_gpghome();
@@ -274,6 +278,7 @@ mod tests {
         );
     }
 
+    /// `$ jpas open "./tests/basic/Example.ssh.json" | jpas save`
     #[test]
     fn test_save_from_stdin() {
         test_init_gpghome();
@@ -319,6 +324,7 @@ mod tests {
         )
     }
 
+    /// `$ cat "./tests/basic/Example.ssh.json" | jpas save "./tests/basic/test_save_to_file.temp.ssh.json"`
     #[test]
     fn test_save_to_file() {
         test_init_gpghome();

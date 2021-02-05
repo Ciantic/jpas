@@ -1,5 +1,5 @@
 [package]
-name = "pass"
+name = "jpas"
 version = "0.1.0"
 authors = ["Jari O. O. Pennanen <ciantic@oksidi.com>"]
 edition = "2018"

@@ -129,6 +129,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
 
 [[package]]
+name = "jpas"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "derive_more",
+ "normpath",
+ "once_cell",
+ "serde_json",
+ "url",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -172,18 +184,6 @@ name = "os_str_bytes"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afb2e1c3ee07430c2cf76151675e583e0f19985fa6efae47d6848a3e2c824f85"
-
-[[package]]
-name = "pass"
-version = "0.1.0"
-dependencies = [
- "clap",
- "derive_more",
- "normpath",
- "once_cell",
- "serde_json",
- "url",
-]
 
 [[package]]
 name = "percent-encoding"
