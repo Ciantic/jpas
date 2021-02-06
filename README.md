@@ -1,8 +1,16 @@
 # jpas
 
-Work in progress.
+Work in progress. This has same ideas as the passwordstore.org, but I wanted to
+build on limitation that signing and decrypting requires touch on YubiKey. This
+means I can't GPG encrypt whole entry, and parts of the entry must be indexable.
 
-Idea is to parse JSON, with a property called secrets, that is PGP encrypted JSON value:
+jpas open and save commands [are also available as bash
+scripts](./bash-version/README.md) in the `bash-version` directory. Currently
+the Rust binary replicates the bash script behavior, and not very useful.
+
+## Behavior
+
+Saved (encrypted) entries looks like this:
 
 ```json
 {
@@ -12,7 +20,7 @@ Idea is to parse JSON, with a property called secrets, that is PGP encrypted JSO
 }
 ```
 
-When decrypted it looks like this:
+When opened (decrypted) it looks like this:
 
 ```json
 {
@@ -22,13 +30,6 @@ When decrypted it looks like this:
         "password": "swordfish"
     }
 }
-```
-
-Genrally jpas is not very useful at the moment, you can do without it pretty easily with just:
-
-```bash
-cat Example.website.json | jq -r '.secrets' | gpg -q --decrypt 2>/dev/null | jq -r '.password'
-# Gets the password swordfish
 ```
 
 ## Examples
