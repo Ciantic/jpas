@@ -92,7 +92,7 @@ directory if tests ceases to function for some reason.
 -   Some sort of JSON editor with ability to work between pipe without temporary
     files, e.g.
 
-    `jpas-open Entry.json | somejsoneditor | jpas-save`.
+    `jpas open Entry.json | somejsoneditor | jpas save`.
 
     Creating editor is outside the scope of these scripts, as it would require a
     lot interaction and Rust is a better tool for that.
