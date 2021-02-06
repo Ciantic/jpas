@@ -34,27 +34,58 @@ When opened (decrypted) it looks like this:
 
 ## Examples
 
-```bash
+### Saving an entry
 
-# Create or update as one shot
+```bash
+# Save to entry given as argument
+
+echo '{ "url" : "https://example.com", "secrets" : { "password" : "swordfish"} }' | jpas save YourFile.json
+
+# or similarily take the save to file as JSON property $file
+
+echo '{ "url" : "https://example.com", "secrets" : { "password" : "swordfish"}, "$file" : "YourFile.json" }' | jpas save
+```
+
+Above creates `YourFile.json` with contents:
+
+```json
+{ "url": "https://example.com", "secrets": "-----BEGIN PGP MESSAGE-----..." }
+```
+
+### Opening an entry
+
+```bash
+# Open entry by argument
+
+jpas open YourFile.json
+
+# or open entry given in stdin
+
+cat YourFile.json | jpas open
+```
+
+### Other examples
+
+```bash
+# JQ tricks
 jpas open "Google.website.json" | jq '.type=website | .url=https://google.com | .secrets.password=swordfish' | jpas save
+
 jpas open "My Server.ssh.json" | jq '.type=ssh | .server=192.168.8.150' | jpas save
+
 jpas open "Some Weird App.other.json" | jq '.url=https://example.com | .desc="This is a very weird application" | .secrets.password=swordfish' | jpas save
 
+# Open in an editor
+#
 # Edit with your editor and save (requires moreutils with vipe),
 # apparently vipe does a temp file which might not be secure.
 jpas open "Some site.json" | vipe | jpas save
-
-# Find by url example.com, get password, move to clipboard
-find -name "*.website.json" | ... # jpas open | jq ".secrets.password" | jpas clip
-
 ```
 
 ## Tests
 
-Tests should generate new `GNUPGHOME` directory under `./tests/gpg/.gnupghome/`, if
-something fails on creating it, the tests will fail too. Delete that directory
-if tests ceases to function for some reason.
+Tests should generate new `GNUPGHOME` directory under `./tests/gpg/.gnupghome/`,
+if something fails on creating it, the tests will fail too. Delete that
+directory if tests ceases to function for some reason.
 
 ## TODO
 
