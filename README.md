@@ -4,9 +4,13 @@ Work in progress. This has same ideas as the passwordstore.org, but I wanted to
 build on limitation that signing and decrypting requires touch on YubiKey. This
 means I can't GPG encrypt whole entry, and parts of the entry must be indexable.
 
-jpas open and save commands [are also available as bash
-scripts](./bash-version/) in the `bash-version` directory. Currently
-the Rust binary replicates the bash script behavior, and not very useful.
+As a pre-requisite you need to know how to setup and use GPG, otherwise this is
+not for you. Practically this means this tool is inteded for dedicated
+enthusiasts and not for regular users.
+
+jpas's open and save commands [are also available as bash
+scripts](./bash-version/) in the `bash-version` directory. Currently the Rust
+binary replicates the bash script behavior, and not very useful.
 
 ## Behavior
 
@@ -38,11 +42,9 @@ When opened (decrypted) it looks like this:
 
 ```bash
 # Save to entry given as argument
-
 echo '{ "url" : "https://example.com", "secrets" : { "password" : "swordfish"} }' | jpas save YourFile.json
 
 # or similarily take the save to file as JSON property $file
-
 echo '{ "url" : "https://example.com", "secrets" : { "password" : "swordfish"}, "$file" : "YourFile.json" }' | jpas save
 ```
 
@@ -56,18 +58,16 @@ Above creates `YourFile.json` with contents:
 
 ```bash
 # Open entry by argument
-
 jpas open YourFile.json
 
 # or open entry given in stdin
-
 cat YourFile.json | jpas open
 ```
 
 ### Other examples
 
 ```bash
-# JQ tricks
+# JQ is perfect for transforming your entries, as it won't create temporary files that I know of
 jpas open "Google.website.json" | jq '.type=website | .url=https://google.com | .secrets.password=swordfish' | jpas save
 
 jpas open "My Server.ssh.json" | jq '.type=ssh | .server=192.168.8.150' | jpas save
