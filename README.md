@@ -24,6 +24,13 @@ When decrypted it looks like this:
 }
 ```
 
+Genrally jpas is not very useful at the moment, you can do without it pretty easily with just:
+
+```bash
+cat Example.website.json | jq -r '.secrets' | gpg -q --decrypt | jq -r '.password'
+# Gets the password, swordfish "swordfish"
+```
+
 ## Examples
 
 ```bash
@@ -54,6 +61,8 @@ JSON Schema per entry:
 
 -   Website
 -   SSH/SFTP-site
+
+Generally `jpas` could be done rather trivially with existing tools, e.g. `jq` and `gpg`, and piping, so perhaps this tool is not very useful in own.
 
 ## More secure JSON editor
 
