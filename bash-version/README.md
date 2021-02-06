@@ -2,7 +2,7 @@
 
 See the usage and idea from the [main README](../README.md).
 
-## TODO
+## Bash guidelines
 
 -   Bash scripts with no functions or other shenanigans, they are readable from
     top to down. Generally I don't like bash scripts, but since these scripts are

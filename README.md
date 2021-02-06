@@ -87,7 +87,7 @@ Tests should generate new `GNUPGHOME` directory under `./tests/gpg/.gnupghome/`,
 if something fails on creating it, the tests will fail too. Delete that
 directory if tests ceases to function for some reason.
 
-## TODO
+## Todo
 
 -   Some sort of JSON editor with ability to work between pipe without temporary
     files, e.g.
