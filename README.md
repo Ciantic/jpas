@@ -5,7 +5,7 @@ build on limitation that signing and decrypting requires touch on YubiKey. This
 means I can't GPG encrypt whole entry, and parts of the entry must be indexable.
 
 As a pre-requisite you need to know how to setup and use GPG, otherwise this is
-not for you. Practically this means this tool is inteded for dedicated
+not for you. Practically this means this tool is intended for dedicated
 enthusiasts and not for regular users.
 
 jpas's open and save commands [are also available as bash
