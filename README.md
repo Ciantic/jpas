@@ -27,8 +27,8 @@ When decrypted it looks like this:
 Genrally jpas is not very useful at the moment, you can do without it pretty easily with just:
 
 ```bash
-cat Example.website.json | jq -r '.secrets' | gpg -q --decrypt | jq -r '.password'
-# Gets the password, swordfish "swordfish"
+cat Example.website.json | jq -r '.secrets' | gpg -q --decrypt 2>/dev/null | jq -r '.password'
+# Gets the password swordfish
 ```
 
 ## Examples
