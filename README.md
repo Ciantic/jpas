@@ -5,7 +5,7 @@ build on limitation that signing and decrypting requires touch on YubiKey. This
 means I can't GPG encrypt whole entry, and parts of the entry must be indexable.
 
 jpas open and save commands [are also available as bash
-scripts](./bash-version/README.md) in the `bash-version` directory. Currently
+scripts](./bash-version/) in the `bash-version` directory. Currently
 the Rust binary replicates the bash script behavior, and not very useful.
 
 ## Behavior
