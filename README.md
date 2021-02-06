@@ -89,17 +89,28 @@ directory if tests ceases to function for some reason.
 
 ## TODO
 
-JSON Schema per entry:
+-   Some sort of JSON editor with ability to work between pipe without temporary
+    files, e.g.
 
--   Website
--   SSH/SFTP-site
+    `jpas-open Entry.json | somejsoneditor | jpas-save`.
 
-Generally `jpas` could be done rather trivially with existing tools, e.g. `jq` and `gpg`, and piping, so perhaps this tool is not very useful in own.
+    Creating editor is outside the scope of these scripts, as it would require a
+    lot interaction and Rust is a better tool for that.
 
-## More secure JSON editor
+-   Chrome extension which sends the password for a site. It builds index of
+    `.website.json` URLs using call to executable with [native
+    messaging](https://developer.chrome.com/extensions/nativeMessaging#native-messaging-host).
 
-It would be nice to make cli based JSON editor that takes input from stdin and outputs the finald result to stdout. Then I could use it like `vipe`, but without intermediate files.
+## Ideas & guidelines behind
 
-```bash
-jpas open "Some site.json" | somejsoneditor | jpas save
-```
+-   Work with YubiKey touch to decrypt, meaning the decrypting is _slow_ and
+    requires physical touch on YubiKey. Purpose of this limitation is to make
+    stealing all passwords burdensome, as it would require touching YubiKey for
+    all entries. [^filippo]
+-   Whole entry can't be encrypted, e.g. if you want to index all website URLs
+    then the URL properties must not be GPG encrypted. Currently the idea is to
+    encrypt only the credentials, e.g. passwords etc.
+-   Never store decrypted entry to the file system (as temporary files or
+    otherwise).
+
+[^filippo]: Read about Filippo Valsorda's ["Touch to operate Password-store with YubiKey 4"](https://blog.filippo.io/touch-to-operate-password-store-yubikey-4/)
