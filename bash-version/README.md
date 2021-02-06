@@ -14,4 +14,4 @@ escape hatch in case the large single binary aproach start to stink.
     top to down.
 -   Bash scripts should not depend on other bash scripts.
 -   Bash scripts should depend only on few known tools, currently `jq`, `gpg`.
--   I use shellcheck but it's just VSCode's defaults what ever those are.
+-   I use shellcheck but it's just VSCode extension's defaults what ever those are.
