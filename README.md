@@ -94,8 +94,7 @@ directory if tests ceases to function for some reason.
 
     `jpas open Entry.json | somejsoneditor | jpas save`.
 
-    Creating editor is outside the scope of these scripts, as it would require a
-    lot interaction and Rust is a better tool for that.
+    JSON editor is outside the scope of the main binary for the time being.
 
 -   Chrome extension which sends the password for a site. It builds index of
     `.website.json` URLs using call to executable with [native
