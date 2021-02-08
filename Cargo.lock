@@ -136,6 +136,7 @@ dependencies = [
  "derive_more",
  "normpath",
  "once_cell",
+ "serde",
  "serde_json",
  "url",
 ]
