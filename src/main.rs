@@ -125,6 +125,7 @@ mod tests {
         }
     });
 
+    #[test]
     pub fn test_init_gpghome() {
         Lazy::force(&CREATE_GPGHOME);
     }
