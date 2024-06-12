@@ -2,3 +2,4 @@
 .gnupghome
 *temp*
 *.sqlite
+.tmp_secrets

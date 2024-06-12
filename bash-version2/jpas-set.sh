@@ -20,19 +20,24 @@ if [[ ! "$secrets" =~ ^-----BEGIN\ PGP\ MESSAGE----- ]]; then
     fi
 fi
 
+# Get the public keyids used to decrypt the secrets
+# 
+# Example line:
+#   :pubkey enc packet: version 3, algo 18, keyid ABCDEF0123456789
+# Parse only the keyid, secrets_fprs contains newline separated keyids
+secrets_fprs=$(gpg --list-packets <<< "$secrets" 2>&1 | grep -oP 'pubkey .* keyid \K[0-9A-F]+' | sort | uniq)
+
 # Associative array fields
 declare -A fields
 
 fields["secrets"]="$secrets"
-fields["id"]=$(jq --raw-output '.id // -1' <<< "$input_json")
-fields["name"]=$(jq --raw-output '.name // -1' <<< "$input_json")
-fields["type"]=$(jq --raw-output '.type // -1' <<< "$input_json")
-fields["urls"]=$(jq --raw-output -c '.urls // -1' <<< "$input_json")
-fields["username"]=$(jq --raw-output '.username // -1' <<< "$input_json")
-fields["emails"]=$(jq --raw-output -c '.emails // -1' <<< "$input_json")
-fields["notes"]=$(jq --raw-output '.notes // -1' <<< "$input_json")
-fields["url_match_rules"]=$(jq --raw-output '.url_match_rules // -1' <<< "$input_json")
-fields["data"]=$(jq --raw-output '.data // -1' <<< "$input_json")
+fields["secrets_fprs"]=$(jq --raw-input --null-input '[inputs | select(length>0)]' <<< "$secrets_fprs")
+
+# Extract other fields from the input JSON
+field_names=(id name type urls username emails notes url_match_rules data)
+for field_name in "${field_names[@]}"; do
+    fields["$field_name"]=$(jq --raw-output -c ".$field_name // -1" <<< "$input_json")
+done
 
 SQL_FIELDS=()
 SQL_VALUES=()
