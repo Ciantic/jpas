@@ -22,8 +22,11 @@ CREATE TABLE jpas (
     -- encrypted secrets (json) in PGP format or empty string
     secrets TEXT NOT NULL CHECK (secrets LIKE '-----BEGIN PGP MESSAGE-----%' OR secrets = ''),
 
-    -- finger prints of the public keys used to decrypt the secrets
+    -- fingerprints of the public keys used to decrypt the secrets (recipient keys)
     secrets_fprs TEXT NOT NULL DEFAULT '[]' CHECK (json_type(secrets_fprs) = 'array'),
+
+    -- fingerprint of signature key (creator of the secrets)
+    secrets_sig TEXT NOT NULL DEFAULT '',
 
     -- unix timestamps as integers
     created_at INT NOT NULL DEFAULT (CAST(strftime('%s', 'now') as INT)),

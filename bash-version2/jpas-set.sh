@@ -25,12 +25,15 @@ fi
 # Example line:
 #   :pubkey enc packet: version 3, algo 18, keyid ABCDEF0123456789
 # Parse only the keyid, secrets_fprs contains newline separated keyids
-secrets_fprs=$(gpg --list-packets <<< "$secrets" 2>&1 | grep -oP 'pubkey .* keyid \K[0-9A-F]+' | sort | uniq)
+gpg_info=$(gpg --list-packets <<< "$secrets" 2>&1)
+secrets_sig=$(echo "$gpg_info" | grep -oPm1 ':signature packet: .* keyid \K[0-9A-F]+' | sort | uniq)
+secrets_fprs=$(echo "$gpg_info" | grep -oP ':pubkey enc packet: .* keyid \K[0-9A-F]+' | sort | uniq)
 
 # Associative array fields
 declare -A fields
 
 fields["secrets"]="$secrets"
+fields["secrets_sig"]=$secrets_sig
 fields["secrets_fprs"]=$(jq --raw-input --null-input '[inputs | select(length>0)]' <<< "$secrets_fprs")
 
 # Extract other fields from the input JSON
