@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::Parser;
 use derive_more::From;
 use std::{
     fs,
@@ -11,7 +11,7 @@ use crate::{
     Error,
 };
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct OpenOpts {
     pub file: Option<PathBuf>,
 }

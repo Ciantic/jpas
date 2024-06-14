@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::{arg, command, Parser};
 use derive_more::From;
 use std::{io::Read, path::PathBuf};
 
@@ -13,17 +13,28 @@ use commands::{
 };
 use json::*;
 
-#[derive(Clap, Debug)]
-#[clap(version = "0.1", author = "Jari O. O. Pennanen <ciantic@oksidi.com>")]
-struct Opts {
-    #[clap(short, long, parse(from_occurrences))]
-    verbose: i32,
+// Clap intro
+//
+// Derive tutorial
+// https://docs.rs/clap/latest/clap/_derive/_tutorial/index.html
+//
+// Parameters for #[arg] are methods in:
+// https://docs.rs/clap/latest/clap/struct.Arg.html
+//
+// Parameters for #[command] are methods in:
+// https://docs.rs/clap/latest/clap/struct.Command.html
 
-    #[clap(subcommand)]
+#[derive(Parser, Debug)]
+#[command(version = "0.1", author = "Jari O. O. Pennanen <ciantic@oksidi.com>")]
+struct Opts {
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
+
+    #[command(subcommand)]
     subcmd: SubCommand,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 enum SubCommand {
     /// Open entry and outputs to stdout
     Open(OpenOpts),

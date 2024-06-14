@@ -1,9 +1,10 @@
+use clap::Parser;
+
 use crate::json::{json_encrypt_prop, json_get_file, json_remove_file};
 use crate::Error;
-use clap::Clap;
 use std::{io::Read, path::PathBuf};
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct SaveOpts {
     pub file: Option<PathBuf>,
 }

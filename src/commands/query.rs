@@ -1,10 +1,10 @@
-use clap::Clap;
+use clap::{arg, Parser};
 
 use crate::Error;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct QueryOpts {
-    #[clap(short, long)]
+    #[arg(short, long)]
     url: Option<String>,
 }
 
